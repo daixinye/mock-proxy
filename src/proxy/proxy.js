@@ -1,68 +1,67 @@
-var http = require('http');
-var net = require('net');
-var url = require('url');
+var http = require('http')
+var net = require('net')
+var url = require('url')
+
+var util = require('./util')
 
 class Proxy {
     constructor(){
-        this.clientRequest = null
-        this.clientResponse = null
     }
 
-    createServer(port){
+    createServer(port = 8888){
         http.createServer()
             .on('request', this.onRequestHandler.bind(this))
             .listen(port, '0.0.0.0')
+        
+        console.log(`proxy listen :${port}`)
     }
 
     onRequestHandler(clientRequest, clientResponse) {
-        this.clientRequest = clientRequest
-        this.clientResponse = clientResponse
-
-        let beforeRequest = this.beforeRequestHook.call(this)
+        let beforeRequest = this.beforeRequestHook(clientRequest, clientResponse)
 
         beforeRequest
-            .then(this.request.bind(this))
+            .then(data => {
+                console.log(data.message)
+            })
             .catch(err => {
                 console.log(err.message)
             })
     }
 
-    request(){
-        let _url = url.parse(this.clientRequest.url)
+    request(clientRequest, clientResponse){
+        let _url = url.parse(clientRequest.url)
 
         let options = {
             hostname: _url.hostname,
             port: _url.port || 80,
             path: _url.path,
-            method : this.clientRequest.method,
-            headers: this.clientRequest.headers
+            method : clientRequest.method,
+            headers: clientRequest.headers
         }
 
-        let proxyRequest = http.request(options, this.onResponseHandler.bind(this))
-            .on('error', e => {
-                this.clientResponse.end()
+        let proxyRequest = http.request(options, proxyResponse => {
+            clientResponse.writeHead(proxyResponse.statusCode, proxyResponse.headers)
+            proxyResponse.pipe(clientResponse)
+        }).on('error', e => {
+                clientResponse.end()
             })
-        
-        this.clientRequest.pipe(proxyRequest)
+        clientRequest.pipe(proxyRequest)
     }
 
-    onResponseHandler(proxyResponse){
-        this.clientResponse.writeHead(proxyResponse.statusCode, proxyResponse.headers)
-        proxyResponse.pipe(this.clientResponse)
-    }
-
-    beforeRequestHook(){
-        let _url = url.parse(this.clientRequest.url)
+    beforeRequestHook(clientRequest, clientResponse){
+        let _url = url.parse(clientRequest.url)
         if(_url.hostname){
-            console.log('拦截到：' + this.clientRequest.url)
+            console.log('拦截到：' + clientRequest.url)
             return new Promise((resolve,reject) => {
-                resolve({
+                util.sendJSON(clientResponse, {
+                    mock: true,
                     message: 'success'
+                })
+                resolve({
+                    message: 'replace success'
                 })
             })
         }
-
-
         return new Promise((resolve,reject) => {
             reject({
                 message: 'fail'
@@ -70,13 +69,8 @@ class Proxy {
         })
     }
 
-    sendJSON(response, data){
-        response.writeHead(200, {
-            'Content-Type': 'text/plain'
-        })
-        response.end(JSON.stringify(data))
-    }
+
 }
 
 let proxy = new Proxy()
-proxy.createServer(8888)
+proxy.createServer()
