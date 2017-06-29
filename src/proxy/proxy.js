@@ -5,72 +5,71 @@ var url = require('url')
 var util = require('./util')
 
 class Proxy {
-    constructor(){
+    constructor(config = {
+        port:8889,
+        ip: '0.0.0.0'
+    }){
+        this.config = config
     }
 
-    createServer(port = 8888){
+    createServer(){
         http.createServer()
-            .on('request', this.onRequestHandler.bind(this))
-            .listen(port, '0.0.0.0')
+            .on('request', this.onRequest.bind(this))
+            .listen(this.config.port, this.config.ip)
         
-        console.log(`proxy listen :${port}`)
+        console.log(`proxy listen :${this.config.port}`)
     }
 
-    onRequestHandler(clientRequest, clientResponse) {
-        let beforeRequest = this.beforeRequestHook(clientRequest, clientResponse)
+    onRequest(clientRequest, clientResponse) {
+        // 获取 mock 列表/配置
+        let mockList = this.getMockList()
 
-        beforeRequest
-            .then(data => {
-                console.log(data.message)
-            })
-            .catch(err => {
-                console.log(err.message)
-            })
-    }
-
-    request(clientRequest, clientResponse){
+        // 判断是否需要走 mock
         let _url = url.parse(clientRequest.url)
+        let mock = mockList[_url.hostname]
+        let options = null
 
-        let options = {
-            hostname: _url.hostname,
-            port: _url.port || 80,
-            path: _url.path,
-            method : clientRequest.method,
-            headers: clientRequest.headers
+        if(mock){
+            // 走 mock 
+            clientRequest.headers['Host'] = _url.hostname
+            options = {
+                host: mock.host,
+                port: mock.port || 80,
+                path: _url.path,
+                method: clientRequest.method, 
+                headers: clientRequest.headers
+            }
+            console.log(`${clientRequest.method} ${clientRequest.url} => ${mock.host}`)
+        }else{
+            // 正常走线上 转发
+            options = {
+                hostname: _url.hostname,
+                port: _url.port || 80,
+                path: _url.path,
+                method : clientRequest.method,
+                headers: clientRequest.headers
+            }
+            console.log(`${clientRequest.method} ${clientRequest.url}`)
         }
 
         let proxyRequest = http.request(options, proxyResponse => {
             clientResponse.writeHead(proxyResponse.statusCode, proxyResponse.headers)
             proxyResponse.pipe(clientResponse)
         }).on('error', e => {
-                clientResponse.end()
-            })
+            console.log(e)
+        })
         clientRequest.pipe(proxyRequest)
     }
 
-    beforeRequestHook(clientRequest, clientResponse){
-        let _url = url.parse(clientRequest.url)
-        if(_url.hostname){
-            console.log('拦截到：' + clientRequest.url)
-            return new Promise((resolve,reject) => {
-                util.sendJSON(clientResponse, {
-                    mock: true,
-                    message: 'success'
-                })
-                resolve({
-                    message: 'replace success'
-                })
-            })
+    getMockList(){
+        return {
+            'www.csdn.net': {
+                des: 'test',
+                host: '127.0.0.1',
+                port: '8080'
+            },
         }
-        return new Promise((resolve,reject) => {
-            reject({
-                message: 'fail'
-            })
-        })
     }
-
-
 }
 
-let proxy = new Proxy()
-proxy.createServer()
+module.exports = Proxy
