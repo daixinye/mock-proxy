@@ -17,7 +17,7 @@ class Proxy {
             .on('request', this.onRequest.bind(this))
             .listen(this.config.port, this.config.ip)
         
-        console.log(`proxy listen :${this.config.port}`)
+        console.log(`Proxy Server listening on ${this.config.port}`)
     }
 
     onRequest(clientRequest, clientResponse) {

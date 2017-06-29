@@ -1,5 +1,5 @@
-const Proxy = require('./src/proxy/proxy')
-const Web = require('./src/web/web')
+const Proxy = require('./proxy/proxy')
+const Web = require('./web/web')
 
 // 开启正向代理服务
 let proxy = new Proxy()
