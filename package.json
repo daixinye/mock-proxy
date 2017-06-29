@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "forever -w index.js -watchDirectory ./src",
+    "stop" : "forever stopall"
   },
   "repository": {
     "type": "git",
@@ -18,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/daixinye/mock-proxy/issues"
   },
-  "homepage": "https://github.com/daixinye/mock-proxy#readme"
+  "homepage": "https://github.com/daixinye/mock-proxy#readme",
+  "dependencies": {
+    "forever": "^0.15.3"
+  }
 }
