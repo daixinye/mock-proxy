@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/daixinye/mock-proxy#readme",
   "dependencies": {
-    "express": "^4.15.3",
-    "forever": "^0.15.3"
+    "forever": "^0.15.3",
+    "koa": "^2.3.0"
   }
 }

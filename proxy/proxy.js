@@ -1,8 +1,10 @@
-var http = require('http')
-var net = require('net')
-var url = require('url')
+'use strict'
+const http = require('http')
+const net = require('net')
+const url = require('url')
 
-var util = require('./util')
+const util = require('./util')
+const mock = require('./../mock/mock')
 
 class Proxy {
     constructor(config = {
@@ -17,29 +19,26 @@ class Proxy {
             .on('request', this.onRequest.bind(this))
             .listen(this.config.port, this.config.ip)
         
-        console.log(`Proxy Server listening on ${this.config.port}`)
+        console.log('Proxy Server listening on %s', this.config.port)
     }
 
     onRequest(clientRequest, clientResponse) {
-        // 获取 mock 列表/配置
-        let mockList = this.getMockList()
-
         // 判断是否需要走 mock
         let _url = url.parse(clientRequest.url)
-        let mock = mockList[_url.hostname]
+        let mockData = this.format(mock.get(_url.hostname))
         let options = null
 
-        if(mock){
+        if(mockData){
             // 走 mock 
             clientRequest.headers['Host'] = _url.hostname
             options = {
-                host: mock.host,
-                port: mock.port || 80,
+                host: mockData.host,
+                port: mockData.port || 80,
                 path: _url.path,
                 method: clientRequest.method, 
                 headers: clientRequest.headers
             }
-            console.log(`${clientRequest.method} ${clientRequest.url} => ${mock.host}`)
+            console.log('%s %s => %s', clientRequest.method, clientRequest.url, mockData.host)
         }else{
             // 正常走线上 转发
             options = {
@@ -49,7 +48,7 @@ class Proxy {
                 method : clientRequest.method,
                 headers: clientRequest.headers
             }
-            console.log(`${clientRequest.method} ${clientRequest.url}`)
+            console.log('%s %s', clientRequest.method, clientRequest.url)
         }
 
         let proxyRequest = http.request(options, proxyResponse => {
@@ -61,13 +60,35 @@ class Proxy {
         clientRequest.pipe(proxyRequest)
     }
 
-    getMockList(){
+    getMockTest(){
         return {
-            'www.csdn.net': {
-                des: 'test',
-                host: '127.0.0.1',
-                port: '8080'
-            },
+            hostname: 'www.csdn.net',
+            host: '127.0.0.1',
+            port: '8080'
+        }
+    }
+
+    format(data = null){
+        if(!data){
+            return
+        }
+
+        let is_mock = data.global_flag === -1 ? false : true
+        
+        if(data && is_mock){
+            let {
+                hostname,
+                global,
+                global_flag 
+            } = data
+            let config = global[global_flag]
+            return {
+                hostname,
+                host: config.host,
+                port: config.port || 80
+            }
+        }else{
+            return null
         }
     }
 }
