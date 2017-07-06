@@ -2,6 +2,10 @@
 const fs = require('fs')
 const PATH = __dirname + '/data/'
 
+function _format(hostname){
+    return PATH + hostname + '.json'
+}
+
 class Mock {
     constructor(){
         
@@ -11,7 +15,7 @@ class Mock {
         let data = null
 
         try{
-            data = require(PATH + hostname)
+            data = require(_format(hostname))
         }catch(e){
         }
 
@@ -33,10 +37,32 @@ class Mock {
             jsonString = JSON.stringify(data, null, 4)
         }catch(e){
         }
-        fs.writeFileSync(PATH + hostname + '.json', jsonString, 'utf-8')
+        fs.writeFileSync(_format(hostname), jsonString, 'utf-8')
 
         return true
     }
+
+    del(hostname) {
+        try{
+            fs.unlinkSync(_format(hostname))
+        }catch(e){
+            console.log(e)
+        }
+    }
 }
+
+let Test = new class{
+    constructor() {
+        this.mock = new Mock()
+        console.log('test')
+        this.main()
+    }
+
+    main(){
+        // this.mock.put('testhost')
+        this.mock.del('testhost')
+    }
+}()
+
 
 module.exports = new Mock()
