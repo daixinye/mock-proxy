@@ -1,0 +1,14 @@
+{
+    "www.csdn.net/test": {
+        "status": "success",
+        "data": {
+            "msg": "hello mock"
+        }
+    },
+    "www.csdn.net/": {
+        "status": "success"
+    },
+    "api.yuerbao.com/": {
+        "msg": "success"
+    }
+}

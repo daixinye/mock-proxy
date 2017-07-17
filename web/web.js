@@ -4,6 +4,8 @@ const http = require('http')
 const koa = require('koa')
 const fs = require('fs')
 
+const mockDataList = require('./mock.json')
+
 class Web {
     constructor(){
         this.app = new koa()
@@ -34,7 +36,13 @@ class Web {
     }
 
     async test(ctx, next){
-        ctx.body = JSON.stringify(ctx.headers, null, 4)
+        let url = ctx.headers.host + ctx.url
+        let mock = mockDataList[url] || {
+            status: 'proxy error',
+            msg: 'mockData not found',
+            headers: ctx.headers
+        }
+        ctx.body = JSON.stringify(mock, null, 4)
         await next()
     }
 }

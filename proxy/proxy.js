@@ -3,8 +3,7 @@ const http = require('http')
 const net = require('net')
 const url = require('url')
 
-const util = require('./util')
-const mock = require('./../mock/mock')
+const hosts = require('./hosts')
 
 class Proxy {
     constructor(config = {
@@ -25,7 +24,7 @@ class Proxy {
     onRequest(clientRequest, clientResponse) {
         // 判断是否需要走 mock
         let _url = url.parse(clientRequest.url)
-        let mockData = this.format(mock.get(_url.hostname))
+        let mockData = this.format(hosts.get(_url.hostname))
         let options = null
 
         if(mockData){
@@ -60,32 +59,24 @@ class Proxy {
         clientRequest.pipe(proxyRequest)
     }
 
-    getMockTest(){
-        return {
-            hostname: 'www.csdn.net',
-            host: '127.0.0.1',
-            port: '8080'
-        }
-    }
-
     format(data = null){
         if(!data){
             return
         }
 
-        let is_mock = data.global_flag === -1 ? false : true
+        let is_mock = data.valid === -1 ? false : true
         
         if(data && is_mock){
             let {
                 hostname,
-                global,
-                global_flag 
+                config,
+                valid
             } = data
-            let config = global[global_flag]
+            let validConfig = config[valid]
             return {
                 hostname,
-                host: config.host,
-                port: config.port || 80
+                host: validConfig.host,
+                port: validConfig.port || 80
             }
         }else{
             return null
