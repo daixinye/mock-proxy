@@ -4,45 +4,54 @@ const http = require('http')
 const koa = require('koa')
 const fs = require('fs')
 
-const mockDataList = require('./mock.json')
+const mockDataList = require('./../config/mock.json')
 
 class Web {
-    constructor(){
+    constructor(config = {
+        port: '8080'
+    }){
+        this.config = config
         this.app = new koa()
     }
 
-    createServer(config = {
-        port: '8080'
-    }){
-        this.app.listen(config.port, () => {
-            console.log(`Web Server listening on ${config.port}`)
+    createServer(){
+        this.app.listen(this.config.port, () => {
+            console.log(`Web Server listening on ${this.config.port}`)
         })
 
         this.app.use(this.log)
-        this.app.use(this.test)
-        // this.app.use(this.static)
+        this.app.use(this.static)
+        this.app.use(this.mock)
     }
 
     async log(ctx, next){
-        console.log('%s %s', ctx.method, ctx.url)
+        console.log('LocalWeb: %s %s', ctx.method, ctx.url)
         await next()
     }
 
     async static(ctx, next){
         let path = `${__dirname}/static${ctx.url}`
-        let html = fs.readFileSync(path ,'utf-8')
-        ctx.body = html
+        let html = ""
+        try{
+            html = fs.readFileSync(path ,'utf-8')
+            ctx.body = html
+        }catch(e){
+            
+        }
         await next()
     }
 
-    async test(ctx, next){
-        let url = ctx.headers.host + ctx.url
-        let mock = mockDataList[url] || {
-            status: 'proxy error',
-            msg: 'mockData not found',
-            headers: ctx.headers
+    async mock(ctx, next){
+        if(!ctx.body){
+            let url = ctx.host + ctx.request.url.replace('http://','')
+            let mock = mockDataList[url] || {
+                status: 'proxy error',
+                msg: 'mockData not found',
+                ctx,
+            }
+            ctx.body = JSON.stringify(mock, null, 4)
         }
-        ctx.body = JSON.stringify(mock, null, 4)
+        
         await next()
     }
 }
