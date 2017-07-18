@@ -5,7 +5,5 @@
             "msg": "hello mock"
         }
     },
-    "www.csdn.net/": {
-        "status": "success"
-    }
+    "www.csdn.net/": "<html><h1>hello mock</h1></html>"
 }

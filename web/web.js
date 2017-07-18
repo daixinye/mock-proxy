@@ -49,7 +49,7 @@ class Web {
                 msg: 'mockData not found',
                 ctx,
             }
-            ctx.body = JSON.stringify(mock, null, 4)
+            ctx.body = typeof mock == "object" ? JSON.stringify(mock, null, 4) : mock
         }
         
         await next()
