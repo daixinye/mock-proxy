@@ -7,7 +7,7 @@ const hosts = require('./hosts')
 
 class Proxy {
     constructor(config = {
-        port:8889,
+        port:8989,
         ip: '0.0.0.0'
     }){
         this.config = config

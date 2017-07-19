@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "/bin/bash ./setup.sh on 0.0.0.0 8989",
-    "stop": "/bin/bash ./setup.sh off | forever stopall"
+    "start": "/bin/bash ./start.sh on 0.0.0.0 8989",
+    "stop": "/bin/bash ./start.sh off | forever stopall"
   },
   "repository": {
     "type": "git",
