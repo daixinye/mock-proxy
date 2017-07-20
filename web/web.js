@@ -22,6 +22,7 @@ class Web {
         this.app.use(this.log)
         this.app.use(this.static)
         this.app.use(this.mock)
+        this.app.use(this.setResHeader)
     }
 
     async log(ctx, next){
@@ -39,6 +40,13 @@ class Web {
             
         }
         await next()
+    }
+
+    async setResHeader(ctx, next){
+        // 支持 ajax 带 cookie (request with Credentials)
+        ctx.set("access-control-allow-credentials", "true")
+        // 支持跨域
+        ctx.set("Access-Control-Allow-Origin", ctx.request.headers.origin)
     }
 
     async mock(ctx, next){
