@@ -1,9 +1,16 @@
 {
-    "www.csdn.net/test": {
-        "status": "success",
-        "data": {
-            "msg": "hello mock"
-        }
-    },
-    "www.csdn.net/": "<html><h1>hello mock</h1></html>"
+    "www.csdn.net": {
+        "/":[
+            {
+                "req":{
+                    "get": {
+                        "query": "test"
+                    }
+                },
+                "res":{
+                    "msg": "hello mock"
+                }
+            }
+        ]
+    }
 }

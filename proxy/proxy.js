@@ -2,6 +2,7 @@
 const http = require('http')
 const net = require('net')
 const url = require('url')
+const querystring = require('querystring')
 
 const hosts = require('./hosts')
 
@@ -22,41 +23,60 @@ class Proxy {
     }
 
     onRequest(clientRequest, clientResponse) {
-        // 判断是否需要走 mock
-        let _url = url.parse(clientRequest.url)
-        let hostConfig = hosts.get(_url.hostname)
-        let options = null
+        let body = ''
+        clientRequest.setEncoding('utf8')
+        clientRequest.on('data', data => body+=data)
+        clientRequest.on('end', function(){
+            let _url = url.parse(clientRequest.url)
 
-        if(hostConfig){
-            // 走 mock 
-            clientRequest.headers['Host'] = _url.hostname
-            options = {
-                host: hostConfig.host,
-                port: hostConfig.port,
-                path: _url.path,
-                method: clientRequest.method, 
-                headers: clientRequest.headers
-            }
-            console.log('Proxy: %s %s => %s', clientRequest.method, clientRequest.url, hostConfig.host)
-        }else{
-            // 正常走线上 转发
-            options = {
-                hostname: _url.hostname,
-                port: _url.port || 80,
-                path: _url.path,
-                method : clientRequest.method,
-                headers: clientRequest.headers
-            }
-            console.log('Proxy: %s %s', clientRequest.method, clientRequest.url)
-        }
+            let hostConfig = hosts.get(_url.hostname)
+            let options = null
 
-        let proxyRequest = http.request(options, proxyResponse => {
-            clientResponse.writeHead(proxyResponse.statusCode, proxyResponse.headers)
-            proxyResponse.pipe(clientResponse)
-        }).on('error', e => {
-            console.log(e)
+            if(hostConfig){
+                clientRequest.headers['Host'] = _url.hostname
+                clientRequest.headers['cookie'] += hostConfig.cookie || ''
+                
+                options = {
+                    host: hostConfig.host,
+                    port: hostConfig.port,
+                    path: _url.path,
+                    method: clientRequest.method, 
+                    headers: clientRequest.headers
+                }
+                console.log('Proxy: %s %s => %s (%s)', clientRequest.method, clientRequest.url, hostConfig.host, hostConfig.des)
+                    
+                let mock
+                switch(clientRequest.method){
+                    case 'GET':
+                        mock = querystring.parse(_url.query)._mock
+                        break
+                    case 'POST':
+                        mock = querystring.parse(body)._mock
+                        break
+                }
+                mock = JSON.parse(mock)
+                mock._proxy = true
+                mock._request = options
+                clientResponse.end(JSON.stringify(mock))
+            }else{
+                // 正常走线上 转发
+                options = {
+                    hostname: _url.hostname,
+                    port: _url.port || 80,
+                    path: _url.path,
+                    method : clientRequest.method,
+                    headers: clientRequest.headers
+                }
+                // console.log('Proxy: %s %s', clientRequest.method, clientRequest.url)
+                let proxyRequest = http.request(options, proxyResponse => {
+                    clientResponse.writeHead(proxyResponse.statusCode, proxyResponse.headers)
+                    proxyResponse.pipe(clientResponse)
+                }).on('error', e => {
+                    console.log(e)
+                })
+                clientRequest.pipe(proxyRequest)
+            }
         })
-        clientRequest.pipe(proxyRequest)
     }
 }
 

@@ -1,10 +1,11 @@
 {
-    "www.csdn.net":{
+    "www.csdn.net": {
         "config": [
             {
                 "host": "127.0.0.1",
                 "port": "8080",
-                "des": "本地mock"
+                "des": "本地mock",
+                "cookie": ""
             }
         ],
         "valid": 0

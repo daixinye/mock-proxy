@@ -17,7 +17,9 @@ class Hosts {
 
             return valid == -1 ? false : {
                 host: config[valid].host,
-                port: config[valid].port || 80
+                port: config[valid].port || 80,
+                cookie: config[valid].cookie,
+                des: config[valid].des
             }
         }
 
