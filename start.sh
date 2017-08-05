@@ -1,6 +1,10 @@
 #!/bin/bash
+echo "Choose the networkservice（1、2 or 3）: "
+networksetup -listallnetworkservices | head -n 4 | tail -n 3
+read input
+index=`expr $input + 1`
 
-networkservice=$(networksetup -listallnetworkservices | head -n 3 | tail -n 1)  #获取Mac当前使用的网络名称
+networkservice=$(networksetup -listallnetworkservices | head -n $index | tail -n 1)  #获取Mac当前使用的网络名称
 
 if [ $1 == "on" ]
     then
