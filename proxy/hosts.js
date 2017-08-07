@@ -1,34 +1,25 @@
 'use strict'
 
 class Hosts {
-    constructor(){
-        this.config = require('./../config/hosts.json')
-    }
-
-    get(hostname) {
-        let host = null
-        host = this.config[hostname]
-        if(host){
-            // 存在host配置
-            let {
-                valid,
-                config
-            } = host
-
-            return valid == -1 ? false : {
-                host: config[valid].host,
-                port: config[valid].port || 80,
-                cookie: config[valid].cookie,
-                des: config[valid].des
+    constructor(path = './../config/hosts.json'){
+        Object.defineProperties(this, {
+            config_file: {
+                value: require(path),
+                enumerable: false,
+                configurable: false,
+                writable: false
             }
-        }
-
-        return false
+        })
     }
 
-    //put()
-
-    //del()
+    // 根据 hostname 获取配置信息
+    get(hostname) {
+        let host_config = this.config_file[hostname]
+        // 不存在host配置
+        if(!host_config) return false
+        // 存在host配置
+        return host_config.config[host_config.valid]
+    }
 }
 
-module.exports = new Hosts()
+module.exports = Hosts

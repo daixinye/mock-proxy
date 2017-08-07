@@ -20,8 +20,8 @@ class Web {
         })
 
         this.app.use(this.log)
-        this.app.use(this.mock)
         this.app.use(this.setResHeader)
+        this.app.use(this.mock)
     }
 
     async log(ctx, next){
