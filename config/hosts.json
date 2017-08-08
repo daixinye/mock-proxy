@@ -5,8 +5,10 @@
                 "host": "127.0.0.1",
                 "port": "8080",
                 "desc": "本地mock",
-                "cookie": "",
-                "header": {}
+                "cookie": ";TEST=true;",
+                "headers": {
+                    "TestHeader": "true"
+                }
             }
         ],
         "valid": 0

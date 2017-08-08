@@ -52,6 +52,7 @@ class Proxy {
             port,
             path,
         } = url.parse(this.clientRequest.url)
+
         let {
             method,
             headers
@@ -63,10 +64,10 @@ class Proxy {
 
         let options = null
         if (hostConfig) {
-            // Object.assign(headers, {
-            //     cookie: headers.cookie + hostConfig.cookie,
-            //     ...hostConfig.headers
-            // })
+            Object.assign(headers, hostConfig.headers)
+            Object.assign(headers, {
+                cookie: headers.cookie + hostConfig.cookie,
+            })
             options = {
                 host: hostConfig.host,
                 port: hostConfig.port,
@@ -86,12 +87,12 @@ class Proxy {
 
         let proxyRequest = http.request(options, proxyResponse => {
             clientResponse.writeHead(proxyResponse.statusCode, proxyResponse.headers)
-            proxyResponse.pipe(this.clientResponse)
+            proxyResponse.pipe(clientResponse)
         }).on('error', e => {
             console.log(e)
         })
 
-        this.clientRequest.pipe(proxyRequest)
+        clientRequest.pipe(proxyRequest)
     }
 }
 
